@@ -1,20 +1,35 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useEffect } from 'react'
+import { StatusBar } from 'expo-status-bar'
+import { StyleSheet, Text, View } from 'react-native'
+import { NavigationContainer } from '@react-navigation/native'
+// import { auth, database } from './src/firebase/firebaseConfig'
+import Tabs from './src/components/Tabs'
+import Login from './src/screens/Login'
+import { auth } from './src/firebase/firebaseConfig'
 
-export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
-  );
+const App = () => {
+	if (!auth.currentUser) {
+		return (
+			<NavigationContainer>
+				<Login />
+			</NavigationContainer>
+		)
+	}
+
+	return (
+		<NavigationContainer>
+			<Tabs />
+		</NavigationContainer>
+	)
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+	container: {
+		flex: 1,
+		backgroundColor: '#fff',
+		alignItems: 'center',
+		justifyContent: 'center'
+	}
+})
+
+export default App
