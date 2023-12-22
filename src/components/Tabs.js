@@ -9,7 +9,7 @@ import { Feather } from '@expo/vector-icons'
 
 const Tab = createBottomTabNavigator()
 
-const Tabs = () => {
+const Tabs = ({ setUserLogedIn }) => {
 	return (
 		<Tab.Navigator
 			screenOptions={{
@@ -40,7 +40,7 @@ const Tabs = () => {
 					)
 				}}
 			>
-				{() => <Home />}
+				{() => <Home setUserLogedIn={setUserLogedIn} />}
 			</Tab.Screen>
 			<Tab.Screen
 				name={'Groups'}
