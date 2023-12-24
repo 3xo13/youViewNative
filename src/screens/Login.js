@@ -13,7 +13,7 @@ import {
 	Pressable
 } from 'react-native'
 import { signInWithEmailAndPassword } from 'firebase/auth'
-import createCookey from '../utils/createCookey'
+import createLocalTokin from '../utils/createLocalTokin'
 import { auth } from '../firebase/firebaseConfig'
 // console.log('🚀 ~ file: Login.js:18 ~ auth:', JSON.stringify(auth, null, 2))
 import { colors } from '../utils/variables/colors'
@@ -28,13 +28,15 @@ const Login = ({ navigation, setUserLogedIn }) => {
 	const [email, onChangeEmail] = useState('')
 	const [password, onChangePassword] = useState('')
 
+	// sign in user => set tokin => get/set user data => set authentication state in App to true
+	// todo: Error => set message
 	const handleSubmit = () => {
 		console.log('submitting')
 		const signinUser = async () => {
 			try {
 				await signInWithEmailAndPassword(auth, email, password)
 				const uid = auth.currentUser.uid
-				await createCookey({
+				await createLocalTokin({
 					key: 'accessToken',
 					value: auth.currentUser.accessToken
 				})

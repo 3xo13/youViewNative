@@ -8,7 +8,7 @@ import {
 	signOut
 } from 'firebase/auth'
 import { query, where, getDocs, collection } from 'firebase/firestore'
-// import checkAndRenewToken from '@/utils/checkAndRenewToken'
+import checkAndRenewToken from '../../utils/checkAndRenewToken'
 
 const useAuth = () => {
 	const [user, setUser] = useState(null)
@@ -22,7 +22,7 @@ const useAuth = () => {
 				// if firebase user is logged in get the firestore user from the database
 				// setUser(currentUser)
 				try {
-					// await checkAndRenewToken()
+					await checkAndRenewToken()
 					const uid = currentUser.uid
 					const q = query(
 						collection(database, 'users'),

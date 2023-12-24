@@ -13,7 +13,7 @@ import { AuthContextProvider } from './src/components/auth/AuthContextProvider'
 
 const App = () => {
 	// const { user, loading } = UserAuth()
-	const [userLogedIn, setUserLogedIn] = useState()
+	const [userLogedIn, setUserLogedIn] = useState(true)
 
 	// useEffect(() => {
 	// 	;(async () => {

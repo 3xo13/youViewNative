@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { database } from '../firebase/firebaseConfig'
 import { query, collection, orderBy, limit, getDocs } from 'firebase/firestore'
 
-const useGetPosts = async () => {
+const useGetPosts = () => {
 	const [posts, setPosts] = useState(null)
 	const [loadingPosts, setLoadingPosts] = useState(true)
 
@@ -18,7 +18,6 @@ const useGetPosts = async () => {
 
 				let results = []
 				querySnapshot.forEach((doc) => {
-					// console.log("🚀 ~ file: useGetPosts.js:21 ~ querySnapshot.forEach ~ doc:", doc.data())
 					results.push({ postId: doc.id, postValue: doc.data() })
 				})
 				setPosts(results)
@@ -29,7 +28,7 @@ const useGetPosts = async () => {
 		})()
 	}, [])
 
-	return posts
+	return { posts, loadingPosts }
 }
 
 export default useGetPosts
