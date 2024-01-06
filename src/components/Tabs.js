@@ -4,10 +4,16 @@ import Home from '../screens/Home'
 import User from '../screens/User'
 import Groups from '../screens/Groups'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
-import { createNativeStackNavigator } from '@react-navigation/native-stack'
+import { getHeaderTitle } from '@react-navigation/elements'
 import { Feather } from '@expo/vector-icons'
 
 const Tab = createBottomTabNavigator()
+
+// header: ({ navigation, route, options }) => {
+// 	const title = getHeaderTitle(options, route.name);
+
+// 	return <MyHeader title={title} style={options.headerStyle} />;
+// }
 
 const Tabs = ({ setUserLogedIn }) => {
 	return (
@@ -25,7 +31,8 @@ const Tabs = ({ setUserLogedIn }) => {
 					fontWeight: 'bold',
 					fontSize: 25,
 					color: 'white'
-				}
+				},
+				headerShown: false
 			}}
 		>
 			<Tab.Screen

@@ -33,6 +33,7 @@ const App = () => {
 					<Tabs setUserLogedIn={setUserLogedIn} />
 				)}
 			</AuthContextProvider>
+			<StatusBar style={'dark'} hidden />
 		</NavigationContainer>
 	)
 }

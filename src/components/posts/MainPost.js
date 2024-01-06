@@ -1,9 +1,38 @@
-import React, { useState } from 'react'
-import { View, Text, StyleSheet, Image, ScrollView } from 'react-native'
+import React, { useState, useEffect, useRef } from 'react'
+import {
+	View,
+	Text,
+	StyleSheet,
+	Image,
+	ScrollView,
+	Pressable
+} from 'react-native'
 import Loading from '../Loading'
-import { colors } from '../../utils/variables/colors'
+import colors from '../../utils/variables/colors'
+import checkAndRenewToken from '../../utils/checkAndRenewToken'
+import getUserId from '../../utils/getUserId'
+import { auth, database } from '../../firebase/firebaseConfig'
+import {
+	doc,
+	updateDoc,
+	increment,
+	arrayRemove,
+	arrayUnion,
+	deleteDoc,
+	addDoc,
+	collection
+} from 'firebase/firestore'
+import { Video, ResizeMode } from 'expo-av'
+import { WebView } from 'react-native-webview'
+import changeYoutubeUrl from '../../utils/changeYTUrl'
+import dimensions from '../../utils/variables/dimensions'
+import { Feather } from '@expo/vector-icons'
+import deletePost from '../../utils/posts/deletePost'
+import ConfirmationMessage from '../global/ConfirmationMessage'
+import NewPost from '../../utils/posts/NewPost'
+import EditMainPost from '../../utils/posts/EditMainPost'
 
-const MainPost = ({ post }) => {
+const MainPost = ({ post, user }) => {
 	const {
 		username,
 		time,
@@ -16,6 +45,7 @@ const MainPost = ({ post }) => {
 		platform,
 		watched
 	} = post.postValue
+	const postId = post.postId
 	// post main states
 	const [play, setPlay] = useState(false)
 	const [timer, setTimer] = useState(time)
@@ -23,195 +53,180 @@ const MainPost = ({ post }) => {
 	const [pageLoading, setPageLoading] = useState(false)
 	const [viewed, setViewed] = useState(watched)
 
+	const video = useRef(null)
+
 	// post options states
 	const [usePostOptions, setUsePostOptions] = useState(false)
 	const [isOwner, setIsOwner] = useState(false)
 	const [reporting, setReporting] = useState(false)
+	const [editing, setEditing] = useState(false)
 	const [reportCase, setReportCase] = useState(false)
+	const [deleteConfirmation, setDeleteConfirmation] = useState(false)
 
 	const reward = Math.floor(cost / views)
 	const progressPercentage =
 		viewed === 0 ? viewed : (viewed / views).toFixed(2) * 100
+	const uid = auth.currentUser.uid
+
+	let embedUrl = link
+	if (platform === 'youtube') {
+		embedUrl = changeYoutubeUrl(link)
+	}
+
+	// check if the user is the owner of the post
+	useEffect(() => {
+		if (user) {
+			if (user.userId === userId) {
+				setIsOwner(true)
+			} else {
+				setIsOwner(false)
+			}
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [user])
 
 	return (
-		<ScrollView style={styles.container}>
-			{pageLoading && <Loading />}
-			{/* {reporting && (
-				<Report
-					setReportCase={setReportCase}
-					setReporting={setReporting}
-					handleReport={handleReport}
+		<View style={styles.container}>
+			{deleteConfirmation && (
+				<ConfirmationMessage
+					message={'Are you sure you want to delete this post?'}
+					cancel={setDeleteConfirmation}
+					confirm={{
+						type: 'Delete',
+						func: () => deletePost(setPageLoading, uid, postId)
+					}}
 				/>
-			)} */}
-			{!reporting && (
-				<View>
-					{/* post header, user and info */}
-					<View style={styles.header}>
-						<View style={styles.headerImageWrapper}>
+			)}
+
+			{/* {editing && <EditMainPost />} */}
+
+			{/* overlay */}
+			<View style={styles.layer} pointerEvents={'box-none'}>
+				<View style={styles.layerBody}>
+					{/* info */}
+					<View style={styles.infoWrapper}>
+						<View style={[styles.userInfoWrapper]}>
 							<Image
 								source={{ uri: userImage }}
-								alt="user image"
-								style={styles.image}
+								width={50}
+								height={50}
+								style={styles.userImage}
 							/>
-							<Text style={styles.text}>{username}</Text>
+							<Text style={styles.username}>{username}</Text>
 						</View>
-						<View style={styles.infoWrapper}>
-							<View className="  w-full flex justify-end px-5">
-								{/* <button
-									className="font-bold text-3xl text-white mt-2"
-									onClick={(e) => setUsePostOptions((prev) => !prev)}
-								>
-									⋮
-								</button> */}
-							</View>
-							<Text style={styles.text}>
-								{reward}
-								<Text className="text-yellow-500" style={styles.text}>
-									&ensp;$
-								</Text>
-							</Text>
-							{platform && platform !== 'tiktok' && (
-								<Text style={styles.text}>
-									{timer}
-									<Text style={styles.text}>&ensp;🕓</Text>
-								</Text>
-							)}
+
+						<View style={[styles.postInfoWrapper]}>
+							<Text style={styles.title}>{title}</Text>
 						</View>
 					</View>
 
-					{/* post body, title and video */}
-					{usePostOptions ? (
-						<Text />
-					) : (
-						// <TextostOptions
-						// 	handleDelete={handleDelete}
-						// 	setReporting={setReporting}
-						// 	isOwner={isOwner}
-						// />
-						<View className="w-full   ">
-							<View className="w-full  flex  p-3 ">
-								<Text style={styles.text}>{title}</Text>
-							</View>
-							{((plat) => {
-								if (plat === 'tiktok') {
-									return (
-										<View className="p-3">
-											{/* <Link
-												href={link}
-												target="blank"
-												className="w-fit flex-center w-full"
-											>
-												<Image
-													src="/assets/icons/tiktok.png"
-													alt=""
-													className="w-full h-[150px] object-contain"
-													onClick={(e) => setSendReward(true)}
-												/>
-											</Link> */}
-										</View>
-									)
-								}
-								if (plat === 'youtube' || plat === 'facebook') {
-									return (
-										<View className="flex items-center justify-center w-full overflow-y-hidden h-[400px]">
-											{/* <ReactPlayer
-												url={embedUrl}
-												onPlay={(e) => setPlay(true)}
-												onPause={(e) => setPlay(false)}
-												controls={true}
-											/> */}
-										</View>
-									)
-								}
-							})(platform)}
-						</View>
-					)}
-					{/* post view metter */}
-					{!usePostOptions && (
-						<View style={styles.meterWrapper}>
-							<View style={styles.innerMeterWrapper}>
-								<Text style={styles.text}>{viewed}</Text>
-								<View style={styles.progressBarWrapper}>
-									<View
-										style={[
-											styles.progressBar,
-											{
-												width: `${progressPercentage}%`
-											}
-										]}
-									/>
-								</View>
-								<Text style={styles.text}>{views}</Text>
-							</View>
-						</View>
-					)}
+					{/* options */}
+					<View style={styles.btnsWrapper}>
+						{!isOwner && (
+							<Pressable>
+								<Feather name={'slash'} size={25} color={'white'} />
+							</Pressable>
+						)}
+						{/* {isOwner && (
+								<Pressable onPress={(e) => setEditing(true)}>
+									<Feather name={'edit'} size={25} color={colors.green} />
+								</Pressable>
+							)} */}
+						{isOwner && (
+							<Pressable onPress={(e) => setDeleteConfirmation(true)}>
+								<Feather name={'trash-2'} size={25} color={colors.red} />
+							</Pressable>
+						)}
+					</View>
 				</View>
-			)}
-		</ScrollView>
+			</View>
+			<View
+				style={[
+					styles.wrapper,
+					{ height: platform === 'facebook' ? 620 : 620 } //dimensions.height - 20
+				]}
+			>
+				<WebView
+					source={{
+						uri: embedUrl
+					}}
+					style={[styles.web]}
+				/>
+			</View>
+		</View>
 	)
 }
 // className={'w-[50%] h-2 rounded bg-white mx-3'}
 const styles = StyleSheet.create({
 	container: {
-		width: '100%',
-		height: 250,
-		flexDirection: 'column',
-		backgroundColor: colors.darck,
-		paddingHorizontal: 10,
-		marginBottom: 10
-	},
-	header: {
-		width: '100%',
-		flexDirection: 'row',
-		alignItems: 'center',
-		justifyContent: 'space-between'
-	},
-	headerImageWrapper: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		justifyContent: 'flex-start',
-		paddingVertical: 10
-	},
-	image: {
-		width: 60,
-		height: 60,
-		marginHorizontal: 10,
-		objectFit: 'cover',
-		borderRadius: 50
-	},
-	text: {
-		color: 'white'
-	},
-	infoWrapper: {
-		flexDirection: 'column',
-		alignItems: 'center',
-		justifyContent: 'flex-start'
-	},
-	meterWrapper: {
-		width: '100%',
-		height: 50,
-		flexDirection: 'row',
-		alignItems: 'center',
-		justifyContent: 'space-evenly'
-	},
-	innerMeterWrapper: {
-		width: '100%',
-		height: '80%',
-		flexDirection: 'row',
+		width: dimensions.width,
+		height: dimensions.height - 40,
+		backgroundColor: colors.dark,
 		alignItems: 'center',
 		justifyContent: 'center'
 	},
-	progressBar: {
-		height: '100%',
-		backgroundColor: colors.green,
-		borderRadius: 5
+	web: {
+		width: '100%',
+		alignItems: 'center',
+		justifyContent: 'center'
 	},
-	progressBarWrapper: {
-		width: '50%',
-		height: 10,
-		backgroundColor: 'white',
-		marginHorizontal: 10,
-		borderRadius: 5
+	wrapper: {
+		width: dimensions.width,
+		height: dimensions.height - 20,
+		backgroundColor: 'white'
+	},
+	layer: {
+		width: '100%',
+		height: '100%',
+		position: 'absolute',
+		zIndex: 1,
+		justifyContent: 'flex-end'
+	},
+	layerBody: {
+		width: '100%',
+		flexDirection: 'row',
+		backgroundColor: 'rgba(0, 0, 0, 0.5)',
+		padding: 10
+	},
+	infoWrapper: {
+		width: '90%'
+	},
+	btnsWrapper: {
+		width: '10%',
+		alignItems: 'center'
+	},
+	userInfoWrapper: {
+		flexDirection: 'row',
+		alignItems: 'flex-end'
+	},
+	postInfoWrapper: {
+		marginBottom: 10
+	},
+	userImage: {
+		width: 70,
+		height: 70,
+		margin: 10,
+		borderRadius: 50
+	},
+	username: {
+		marginBottom: 10,
+		color: 'white',
+		fontSize: 20
+	},
+	title: {
+		width: '100%',
+		color: 'white',
+		fontSize: 15,
+		padding: 5
+	},
+	newPostWraaper: {
+		left: 0,
+		right: 0,
+		top: 0,
+		width: '100%',
+		position: 'absolute',
+		zIndex: 3,
+		backgroundColor: 'rgba(0, 0, 0, 0.9)'
 	}
 })
 

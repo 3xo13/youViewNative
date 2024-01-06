@@ -11,18 +11,18 @@ const useGetPosts = () => {
 			try {
 				const q = query(
 					collection(database, 'posts'),
-					orderBy('date', 'desc'),
-					limit(5)
+					// orderBy('date', 'desc'),
+					// limit(5)
 				)
 				const querySnapshot = await getDocs(q)
 
 				let results = []
 				querySnapshot.forEach((doc) => {
-					results.push({ postId: doc.id, postValue: doc.data() })
+					results.push({ postId: doc?.id, postValue: doc?.data() })
 				})
 				setPosts(results)
 			} catch (error) {
-				console.log('🚀 ~ file: useGetPosts.js:10 ~ error:', error)
+				console.log('🚀 ~ file: useGetPosts.js:25 ~ error:', error)
 			}
 			setLoadingPosts(false)
 		})()

@@ -31,7 +31,7 @@ const useAuth = () => {
 					const querySnapshot = await getDocs(q)
 					const newUser = []
 					querySnapshot.forEach((doc) => {
-						newUser.push(doc.data())
+						newUser.push({ userId: doc.id, userData: doc.data() })
 					})
 					setUser(newUser[0])
 				} catch (error) {

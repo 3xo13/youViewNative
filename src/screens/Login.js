@@ -16,7 +16,7 @@ import { signInWithEmailAndPassword } from 'firebase/auth'
 import createLocalTokin from '../utils/createLocalTokin'
 import { auth } from '../firebase/firebaseConfig'
 // console.log('🚀 ~ file: Login.js:18 ~ auth:', JSON.stringify(auth, null, 2))
-import { colors } from '../utils/variables/colors'
+import colors from '../utils/variables/colors'
 import getUserId from '../utils/getUserId'
 import getUser from '../utils/getUser'
 import storeData from '../utils/StoreData'
@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
 	},
 	wrapper: {
 		flex: 1,
-		backgroundColor: colors.darck,
+		backgroundColor: colors.dark,
 		alignItems: 'center',
 		flexDirection: 'column'
 	},

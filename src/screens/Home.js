@@ -10,7 +10,7 @@ import {
 	Pressable
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { UserAuth } from '../components/auth/AuthContextProvider'
 import { signOut, getIdToken } from 'firebase/auth'
 import { auth } from '../firebase/firebaseConfig'
@@ -20,10 +20,15 @@ import readLocalData from '../utils/readLocalData'
 import checkAndRenewToken from '../utils/checkAndRenewToken'
 import createLocalTokin from '../utils/createLocalTokin'
 import MainPost from '../components/posts/MainPost'
-import { colors } from '../utils/variables/colors'
+import colors from '../utils/variables/colors'
+import dimensions from '../utils/variables/dimensions'
+import Loading from '../components/Loading'
+import NewPost from '../utils/posts/NewPost'
 
 const Home = ({ navigation, setUserLogedIn }) => {
 	const { user, loading } = UserAuth()
+	// console.log("🚀 ~ file: Home.js:29 ~ Home ~ user:", user)
+	const [creatingNewPost, setCreatingNewPost] = useState(false)
 
 	// todo from logic map
 	useEffect(() => {
@@ -52,26 +57,58 @@ const Home = ({ navigation, setUserLogedIn }) => {
 
 	const { posts, loadingPosts } = useGetPosts() // both values are undefined
 
-	const postList =
-		posts && posts.map((item, index) => <MainPost key={index} post={item} />)
+	let postList = []
+	if (posts && !loadingPosts) {
+		postList = posts.map((item, index) => (
+			<MainPost key={index} post={item} user={user} />
+		))
+	}
 
 	return (
-		<View>
-			<View style={styles.topWrapper}>
-				<Text>Welcome {user?.username}</Text>
-				<Pressable style={styles.btn} onPress={(e) => signOut(auth)}>
-					<Text>sign out</Text>
-				</Pressable>
-			</View>
+		<View style={styles.container}>
+			{creatingNewPost && user && (
+				<ScrollView style={styles.newPostWraaper}>
+					<NewPost
+						userId={user.userId}
+						setCreatingNewPost={setCreatingNewPost}
+						balance={user.userData.balance}
+						user={user.userData}
+					/>
+				</ScrollView>
+			)}
+			{!creatingNewPost && (
+				<View style={styles.layerWrapper} pointerEvents={'box-none'}>
+					<View style={styles.layerHeader}>
+						<Pressable onPress={() => setCreatingNewPost(true)}>
+							<Text style={styles.headerBtn}>New Post</Text>
+						</Pressable>
+					</View>
+				</View>
+			)}
 
-			<ScrollView style={styles.postContainer}>{postList}</ScrollView>
+			{!creatingNewPost && (
+				<ScrollView
+					snapToAlignment={'start'}
+					decelerationRate={'fast'}
+					snapToInterval={dimensions.height - 40}
+					style={styles.postContainer}
+					overScrollMode={'never'}
+				>
+					{postList}
+					{/* <Loading /> */}
+				</ScrollView>
+			)}
 		</View>
 	)
 }
 
 const styles = StyleSheet.create({
+	container: {
+		backgroundColor: colors.dark
+	},
 	postContainer: {
-		flexDirection: 'column'
+		flexDirection: 'column',
+		gap: 10
 	},
 	topWrapper: {
 		flexDirection: 'row',
@@ -84,6 +121,32 @@ const styles = StyleSheet.create({
 		borderWidth: 2,
 		maxWidth: 70,
 		backgroundColor: colors.red
+	},
+	layerWrapper: {
+		// backgroundColor: 'rgba(0, 0, 0, 0.5)',
+		width: '100%',
+		height: '100%',
+		position: 'absolute',
+		zIndex: 1
+	},
+	layerHeader: {
+		width: '100%',
+		height: '30%',
+		alignItems: 'flex-end'
+	},
+	layerText: {
+		color: 'red'
+	},
+	headerBtn: {
+		paddingVertical: 5,
+		paddingHorizontal: 10,
+		borderWidth: 1,
+		borderColor: 'white',
+		color: 'white',
+		borderRadius: 5,
+		margin: 10,
+		marginTop: 20,
+		backgroundColor: colors.green
 	}
 })
 

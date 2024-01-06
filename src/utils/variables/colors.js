@@ -1,5 +1,7 @@
-export const colors = {
+const colors = {
 	green: '#32cd32',
-	darck: '#242124',
+	dark: '#242124',
 	red: 'tomato'
 }
+
+export default colors
